@@ -2,7 +2,7 @@ export interface IClient {
     query(query: string, params: Array<string | number | boolean>): Array<any>;
 }
 
-interface initOptions {
+type initOptions = {
     client: IClient;
 }
 export let defaultClient: any; // pg,
