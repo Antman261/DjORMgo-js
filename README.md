@@ -3,7 +3,7 @@
 DjORMgo-js is a simple, django-inspired ORM for Node, that aims to fill properties, map joins, and handle basic insertions.
 
 ```typescript
-import {Model} from "djormgo";
+import {Model, FieldType, Field} from "djormgo-js";
 
 class User extends Model {
   tablename = "users";
@@ -30,19 +30,17 @@ console.log(someUsers[0].username) // sally
 DjORMgo aims to provide a reliable way to achieve 80% of database work, while supporting an easy `RawQuery` interface for more complicated queries. For example:
 
 ```typescript
+import {RawQuery} from "djormgo-js";
+
 const users = await userDAO.queryManager.filter(
     new RawQuery(
-        "SELECT * FROM users WHERE active = $1 AND created > $2", 
-        [true, new Date()]
+        "SELECT * FROM users WHERE active = $1 AND created > $2 OR username IN ($3, $4)", 
+        [true, new Date(), 'bob', 'sally']
     )
 );
 console.log(users.length); // 21
 
-userDAO.queryManager.insert([
-    {
-        username: "bobette",
-    }
-]);
+userDAO.queryManager.insert({username: "bobette"});
 
 ```
 
