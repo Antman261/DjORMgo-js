@@ -51,6 +51,10 @@ export class QueryManager {
     }
 
     async insert(row: any, client=null): Promise<any> {
+        if (row instanceof RawQuery) {
+            const result = row.execute(client);
+            return this._buildQueryResult(result);
+        }
         const cleanRow = Object.assign({}, row);
         delete cleanRow[this.autoColumnName];
         const result = await new InsertQuery(cleanRow, this.model.tableName).execute(client);
@@ -59,6 +63,10 @@ export class QueryManager {
     }
 
     async update(row: any, client=null): Promise<any> {
+        if (row instanceof RawQuery) {
+            const result = row.execute(client);
+            return this._buildQueryResult(result);
+        }
         const updateFieldsStr = Object.keys(row)
             .filter(this.removeAutoColumn)
             .map((key, idx) => `${key} = $${idx + 1}`);
