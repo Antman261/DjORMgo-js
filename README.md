@@ -1,9 +1,9 @@
-# simple-orm
+# DjORMgo-js
 
-A simple ORM that fills properties, maps joins, and handles basic insertions.
+DjORMgo-js is a simple, django-inspired ORM for Node, that aims to fill properties, map joins, and handle basic insertions.
 
 ```typescript
-import {Model} from "./src/lib/model";
+import {Model} from "djormgo";
 
 class User extends Model {
   tablename = "users";
@@ -27,7 +27,7 @@ const someUsers = await userDAO.queryManager.filter({active: true})
 console.log(someUsers[0].username) // sally
 ```
 
-Simple ORM aims to provide a reliable way to achieve 80% of database work, while supporting an easy `RawQuery` interface for more complicated queries. For example:
+DjORMgo aims to provide a reliable way to achieve 80% of database work, while supporting an easy `RawQuery` interface for more complicated queries. For example:
 
 ```typescript
 const users = await userDAO.queryManager.filter(
@@ -48,7 +48,7 @@ userDAO.queryManager.insert([
 
 In the previous example, the fields `active` and `created` used their default values, while the field `id` was ignored due to it being an auto-increment field.
 
-Simple ORM does not provide migration management, but does require schema definitions in the form of classes extending Model. 
+DjORMgo does not provide migration management, but does require schema definitions in the form of classes extending Model. 
 
 As such, it will throw errors whenever a field does not match the expected type, rather than trying to continue operation in an unexpected state. 
 

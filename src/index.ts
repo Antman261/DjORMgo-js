@@ -1,1 +1,2 @@
-export * from './lib/async';
+export * from './lib/model';
+export * from './lib/query';
