@@ -1,5 +1,5 @@
 import {Field, FieldType, Model} from "./model";
-import {Filter, SelectQuery, RawQuery, InsertQuery} from "./query";
+import {Filter, SelectQuery, RawQuery, InsertQuery, UpdateQuery} from "./query";
 import {Error} from "tslint/lib/error";
 
 export interface QueryResult {
@@ -50,7 +50,7 @@ export class QueryManager {
         return result.rows.map(this._buildQueryResult);
     }
 
-    async insert(row: any, client=null): Promise<any> {
+    async insert(row: any, client=null): Promise<QueryResult> {
         if (row instanceof RawQuery) {
             const result = row.execute(client);
             return this._buildQueryResult(result);
@@ -62,29 +62,18 @@ export class QueryManager {
         return this._buildQueryResult(result);
     }
 
-    async update(row: any, client=null): Promise<any> {
+    async update(row: any, client=null): Promise<QueryResult> {
         if (row instanceof RawQuery) {
             const result = row.execute(client);
             return this._buildQueryResult(result);
         }
-        const updateFieldsStr = Object.keys(row)
-            .filter(this.removeAutoColumn)
-            .map((key, idx) => `${key} = $${idx + 1}`);
-        const values = Object.assign({}, row);
-        delete values[this.autoColumnName];
-        const result = await new RawQuery(
-            `UPDATE ${this.model.tableName} 
-            SET ${updateFieldsStr} 
-            WHERE ${this.autoColumnName} = ${row[this.autoColumnName]} 
-            RETURNING *`,
-            Object.values(values)
+        const result = await new UpdateQuery(
+            row,
+            this.model.tableName,
+            this.autoColumnName
         ).execute(client);
         console.log(result); // is it a row?
         return this._buildQueryResult(result);
-    }
-
-    private removeAutoColumn(colName: string): boolean {
-        return colName !== this.autoColumnName;
     }
 
     private async _lookup(filter: Filter | RawQuery, client=null): Promise<any> {

@@ -87,3 +87,16 @@ export class InsertQuery extends RawQuery {
         super(queryString, inputs as Array<number | string | boolean | Date>);
     }
 }
+
+export class UpdateQuery extends RawQuery {
+    constructor(row: any, tableName: string, autoColumnName: string) {
+        const fieldsStr = Object.keys(row)
+            .filter(colName => colName !== autoColumnName)
+            .map((k, i) => `${k} = $${i + 1}`)
+            .join(", ");
+        const queryString = `UPDATE ${tableName} SET ${fieldsStr} WHERE ${autoColumnName} = ${row[autoColumnName]}`;
+        const values = Object.assign({}, row);
+        delete values[autoColumnName];
+        super(queryString, Object.values(values) as Array<number | string | boolean | Date>);
+    }
+}
