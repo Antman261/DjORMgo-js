@@ -27,7 +27,7 @@ export class RawQuery {
     private async _execute(client: any= null) {
         // TODO extend this to inspect client type so it can support multiple dbs, e.g. wrap mysqljs callback in a Promise
         if (!client) client = defaultClient;
-        this.cachedResult = await client.query(this.queryString, this.inputs);
+        this.cachedResult = await client.raw(this.queryString, this.inputs);
         return this.cachedResult;
     }
 
@@ -37,8 +37,10 @@ export class RawQuery {
 
     public toString(): string {
         const {queryString, inputs} = this;
-        return queryString.replace(/\$\d/gm, (match: string):string => {
-            return `'${inputs[parseInt(match.replace("$", ""), 10)-1]}'` as string;
+        let i = 0;
+        return queryString.replace(/\?/gm, (match: string):string => {
+            match;
+            return `'${inputs[i++]}'` as string;
         });
     }
 }
@@ -58,9 +60,9 @@ export class SelectQuery extends RawQuery {
     };
     constructor(filter: Filter, tableName: string) {
         const filters = Object.keys(filter)
-            .map((key, idx) => {
+            .map((key) => {
                 const {col, op} = SelectQuery.keyExpander(key);
-                return `${col} ${op} $${idx + 1}`
+                return `${col} ${op} ?`
             })
             .join(" AND ");
         const queryString = `SELECT * FROM ${tableName} WHERE ${filters}`;
@@ -80,9 +82,9 @@ export class InsertQuery extends RawQuery {
         const cols = Object.keys(row)
             .join(", ");
         const valuesStr = Object.keys(row)
-            .map((_x, i) => `$${i + 1}`)
+            .map(() => `?`)
             .join(", ");
-        const queryString = `INSERT INTO ${tableName} (${cols}) VALUES (${valuesStr}) RETURN *`;
+        const queryString = `INSERT INTO ${tableName} (${cols}) VALUES (${valuesStr}) RETURNING *`;
         const inputs = Object.values(row);
         super(queryString, inputs as Array<number | string | boolean | Date>);
     }
@@ -92,9 +94,9 @@ export class UpdateQuery extends RawQuery {
     constructor(row: any, tableName: string, autoColumnName: string) {
         const fieldsStr = Object.keys(row)
             .filter(colName => colName !== autoColumnName)
-            .map((k, i) => `${k} = $${i + 1}`)
+            .map((k) => `${k} = ?`)
             .join(", ");
-        const queryString = `UPDATE ${tableName} SET ${fieldsStr} WHERE ${autoColumnName} = ${row[autoColumnName]}`;
+        const queryString = `UPDATE ${tableName} SET ${fieldsStr} WHERE ${autoColumnName} = ${row[autoColumnName]} RETURNING *`;
         const values = Object.assign({}, row);
         delete values[autoColumnName];
         super(queryString, Object.values(values) as Array<number | string | boolean | Date>);

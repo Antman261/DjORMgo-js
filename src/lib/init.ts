@@ -1,9 +1,10 @@
-export interface IClient {
-    query(query: string, params: Array<string | number | boolean>): Array<any>;
+export interface Client {
+    query(query: string, params: Array<string | number | boolean | Date>): [any];
+    raw(query: string, params: Array<string | number | boolean | Date>): [any];
 }
 
 type initOptions = {
-    client: IClient;
+    client: Client;
 }
 export let defaultClient: any; // pg,
 

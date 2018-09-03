@@ -1,6 +1,6 @@
-import {Field, FieldType, Model} from "./model";
 import {Filter, SelectQuery, RawQuery, InsertQuery, UpdateQuery} from "./query";
-import {Error} from "tslint/lib/error";
+import {FieldType, Model, Field} from "./model";
+import * as _ from "lodash";
 
 export interface QueryResult {
     [name: string]: string | boolean | number | Date;
@@ -22,6 +22,8 @@ export class SchemaError extends Error {
 
 export class QueryManager {
     private readonly autoColumnName: string;
+    private readonly modelClass: any;
+    private readonly tableName: string;
 
     constructor(private model: Model) {
         let autoColumnName = "";
@@ -31,13 +33,14 @@ export class QueryManager {
             }
         }
         this.autoColumnName = autoColumnName;
+        this.modelClass = this.model.constructor.name;
+        this.tableName = this.model.tableName || _.snakeCase(this.modelClass);
     }
 
     async get(filter: Filter | RawQuery, client=null): Promise<QueryResult> {
         const result: any = await this._lookup(filter, client);
         if (result.rows.length === 1) {
-            const row = result.rows[0];
-            return this._buildQueryResult(row);
+            return this._buildQueryResult(result.rows[0]);
         } else if (result.rows.length > 1) {
             throw new GetError(`Too many results for query: ${filter}`);
         } else {
@@ -52,32 +55,30 @@ export class QueryManager {
 
     async insert(row: any, client=null): Promise<QueryResult> {
         if (row instanceof RawQuery) {
-            const result = row.execute(client);
+            const result = await row.execute(client);
             return this._buildQueryResult(result);
         }
         const cleanRow = Object.assign({}, row);
         delete cleanRow[this.autoColumnName];
-        const result = await new InsertQuery(cleanRow, this.model.tableName).execute(client);
-        console.log(result); // is it a row?
-        return this._buildQueryResult(result);
+        const result = await new InsertQuery(cleanRow, this.tableName).execute(client);
+        return this._buildQueryResult(result.rows[0]);
     }
 
     async update(row: any, client=null): Promise<QueryResult> {
         if (row instanceof RawQuery) {
-            const result = row.execute(client);
+            const result = await row.execute(client);
             return this._buildQueryResult(result);
         }
         const result = await new UpdateQuery(
             row,
-            this.model.tableName,
+            this.tableName,
             this.autoColumnName
         ).execute(client);
-        console.log(result); // is it a row?
-        return this._buildQueryResult(result);
+        return this._buildQueryResult(result.rows[0]);
     }
 
     private async _lookup(filter: Filter | RawQuery, client=null): Promise<any> {
-        const query = filter instanceof RawQuery ? filter : new SelectQuery(filter, this.model.tableName);
+        const query = filter instanceof RawQuery ? filter : new SelectQuery(filter, this.tableName);
         return await query.execute(client);
     }
 
@@ -96,10 +97,18 @@ export class QueryManager {
      */
     private typeMapper(modelField: Field, dbData: any): string | boolean | number | Date {
         if (dbData === undefined) {
-            throw new SchemaError(`SchemaError: Model/schema mismatch for ${this.model.tableName}, column ${modelField.name}`);
+            throw new SchemaError(`SchemaError: Model/schema mismatch for ${this.tableName}, column ${modelField.name}`);
         }
-        if (modelField.type === FieldType.DATE) {
-            return new Date(dbData); // This is probably broken but we will check
+        if ([FieldType.AUTO, FieldType.BIGINT, FieldType.INT].includes(modelField.type)) {
+            const v = parseInt(dbData, 10);
+            if (Number.isSafeInteger(v)) {
+                return v;
+            }
+            // this will create unexpected behaviour for ints above 2^53-1... but then
+            // a lot of people probably don't even think about the javascript max int
+            // issue when interacting with a db. As long as it is documented, then this
+            // is a "feature", else it is a bug.
+            // Consider implementing a 64int library
         }
         // TODO check and write coercers, or throw if types don't match. It might make sense for field types to be classes and implement their own coercers.
         return dbData;

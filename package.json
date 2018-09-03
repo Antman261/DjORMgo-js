@@ -7,7 +7,11 @@
   "module": "build/module/index.js",
   "repository": "https://github.com/Antman261/DjORMgo-js",
   "license": "MIT",
-  "keywords": ["orm", "node", "postgres"],
+  "keywords": [
+    "orm",
+    "node",
+    "postgres"
+  ],
   "scripts": {
     "info": "npm-scripts-info",
     "build": "run-s clean && run-p build:*",
@@ -18,7 +22,7 @@
     "fix:tslint": "tslint --fix --project .",
     "test": "run-s build test:*",
     "test:lint": "tslint --project . && prettier \"src/**/*.ts\" --list-different",
-    "test:unit": "nyc --silent ava",
+    "test:unit": "nyc ava --verbose",
     "watch": "run-s clean build:main && run-p \"build:main -- -w\" \"test:unit -- --watch\"",
     "cov": "run-s build test:unit cov:html && opn coverage/index.html",
     "cov:html": "nyc report --reporter=html",
@@ -52,9 +56,13 @@
     "node": ">=8.9"
   },
   "dependencies": {
+    "@types/knex": "^0.14.23",
+    "knex": "^0.15.2",
+    "lodash": "^4.17.10",
     "sha.js": "^2.4.11"
   },
   "devDependencies": {
+    "pg": "^7.4.3",
     "ava": "1.0.0-beta.7",
     "codecov": "^3.0.2",
     "cz-conventional-changelog": "^2.1.0",
