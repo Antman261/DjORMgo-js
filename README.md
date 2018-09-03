@@ -2,6 +2,12 @@
 
 DjORMgo-js is a simple, django-inspired ORM for Node, that aims to fill properties, map joins, and handle basic insertions.
 
+## Install
+
+`yarn add djormgo-js` or `npm i --save djormgo-js`
+
+## Examples
+
 ```typescript
 import {Model, FieldType, Field} from "djormgo-js";
 
@@ -30,7 +36,10 @@ await userDAO.update(bob);
 
 
 const someUsers = await userDAO.filter({active: true})
-console.log(someUsers[0].username) // sally
+console.log(someUsers[0].username); // sally
+
+const earlyUsers = await userDAO.filter({id__lte: 50});
+// returns all users whose id is <= 50
 ```
 
 DjORMgo aims to provide a reliable way to achieve 80% of database work, while supporting an easy `RawQuery` interface for more complicated queries. For example:

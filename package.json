@@ -1,5 +1,5 @@
 {
-  "name": "DjORMgo-js",
+  "name": "djormgo-js",
   "version": "0.1.0",
   "description": "A simple, django-inspired ORM that fills properties, maps joins, and handles basic insertions",
   "main": "build/main/index.js",
