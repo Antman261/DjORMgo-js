@@ -5,7 +5,7 @@ import {InsertQuery, RawQuery, SelectQuery, UpdateQuery} from './query';
 test('RawQuery.toString()', async t => {
     const d = new Date();
     const q = new RawQuery(
-        `SELECT * FROM test WHERE bob = $1 AND sally = $2 AND date = $3`,
+        `SELECT * FROM test WHERE bob = ? AND sally = ? AND date = ?`,
         ["good", 2, d]
     );
     t.is(q.toString(), `SELECT * FROM test WHERE bob = 'good' AND sally = '2' AND date = '${d}'`);
@@ -28,10 +28,10 @@ test('SelectQuery.keyExpander()', async t => {
 
 test('InsertQuery.toString()', async t => {
     const q = new InsertQuery({username: 'bob', active: true}, 'users');
-    t.is(q.toString(), `INSERT INTO users (username, active) VALUES ('bob', 'true') RETURN *`);
+    t.is(q.toString(), `INSERT INTO users (username, active) VALUES ('bob', 'true') RETURNING *`);
 });
 
 test('UpdateQuery.toString()', async t => {
     const q = new UpdateQuery({id: 1, username: 'bobette', active: false}, 'users', 'id');
-    t.is(q.toString(), `UPDATE users SET username = 'bobette', active = 'false' WHERE id = 1`)
+    t.is(q.toString(), `UPDATE users SET username = 'bobette', active = 'false' WHERE id = 1 RETURNING *`)
 })
